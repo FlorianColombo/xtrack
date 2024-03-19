@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import csv
 import os
+import math
         
 from scipy.io import wavfile
 from scipy import signal
@@ -71,4 +72,32 @@ def create_directory(directory_path):
         print(f"Directory '{directory_path}' created successfully.")
     else:
         print(f"Directory '{directory_path}' already exists.")
+
+def rounddown(x):
+    return int(math.floor(x / 1000.0)) * 1000
+
+def writeIndexesCSV(predicted_onsets, predicted_labels, original_sample_rate = 48000, output_path='../Data/Markers/'):
+    with open(output_path+'autoMarkers.csv', 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile, delimiter=' ',
+                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+        csvwriter.writerow(['Name','Start','Duration','Time Format','Type','Description'])
+        for o,l in zip(predicted_onsets, predicted_labels):#, all_durations):
+            sample = int(o*original_sample_rate)
+            csvwriter.writerow([l,rounddown(sample),'0','48000 Hz','Cue','autoMarker'])
+
+def writeIndividualTracks(waveform, predicted_onsets, predicted_labels, sample_rate=16000, output_path='../Audio/XTrack/'):
+    track_id = 1
+    for i, l in enumerate(predicted_labels):
+        if l == 'music':
+            start = predicted_onsets[i]
+            start_idx = int(start * sample_rate)
+            if i < len(predicted_labels) - 1:
+                stop = predicted_onsets[i+1]
+                stop_idx = int(stop * sample_rate)
+            else:
+                stop_idx = -1
+            track = waveform[start_idx:stop_idx]
+
+            wavfile.write(output_path+'track'+str(track_id)+'.wav', sample_rate, track)
+            track_id += 1       
 
