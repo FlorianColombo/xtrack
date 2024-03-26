@@ -77,13 +77,12 @@ def rounddown(x):
     return int(math.floor(x / 1000.0)) * 1000
 
 def writeIndexesCSV(predicted_onsets, predicted_labels, original_sample_rate = 48000, output_path='../Data/Markers/'):
-    with open(output_path+'autoMarkers.csv', 'w', newline='') as csvfile:
-        csvwriter = csv.writer(csvfile, delimiter=' ',
-                                quotechar='|', quoting=csv.QUOTE_MINIMAL)
+    with open(output_path+'XTrack.csv', 'w', newline='') as csvfile:
+        csvwriter = csv.writer(csvfile, delimiter='\t')
         csvwriter.writerow(['Name','Start','Duration','Time Format','Type','Description'])
         for o,l in zip(predicted_onsets, predicted_labels):#, all_durations):
             sample = int(o*original_sample_rate)
-            csvwriter.writerow([l,rounddown(sample),'0','48000 Hz','Cue','autoMarker'])
+            csvwriter.writerow([l,time_format(o),'0:00.000','decimal','Cue','XTrack_marker'])
 
 def writeIndividualTracks(waveform, predicted_onsets, predicted_labels, sample_rate=16000, output_path='../Audio/XTrack/'):
     track_id = 1

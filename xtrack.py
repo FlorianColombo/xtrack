@@ -9,6 +9,8 @@ from IPython.display import Audio
 from scipy.io import wavfile
 from scipy import signal
 from pathlib import Path
+from pydub import AudioSegment
+
 
 from utils import *
 
@@ -38,23 +40,31 @@ neutral_labels = []
 labels = music_labels+non_music_labels+neutral_labels
 
 def processAudioFile(path):
-	wav_file_name = path
-	filename = str(wav_file_name).split('/')[-1][:-4]
+	filename = str(path).split('/')[-1][:-4]
 	print('processing', filename, '...')
 
-	sample_rate, wav_data = wavfile.read(wav_file_name, 'rb')
-	original_sample_rate = sample_rate
-	sample_rate, wav_data = ensure_sample_rate(sample_rate, wav_data)
+	if 'wav' in str(path):
+		sample_rate, data = wavfile.read(path, 'rb')
+		original_sample_rate = sample_rate
+		sample_rate, data = ensure_sample_rate(sample_rate, data)
+	elif 'mp3' in str(path):
+		# Read the MP3 file
+		audio = AudioSegment.from_mp3(path)
+		# Convert audio to 16kHz sampling rate
+		sample_rate = 16000
+		audio = audio.set_frame_rate(sample_rate)
+		# Extract raw data and convert it to numpy array
+		data = np.array(audio.get_array_of_samples())
 	
 	# Show some basic information about the audio.
-	duration = len(wav_data)/sample_rate
+	duration = len(data)/sample_rate
 	print('Sample rate: %iHz'%sample_rate)
-	print('Total duration: %is'%duration)
-	print('Size of the input: %i samples'%len(wav_data))
+	print('Total duration:', time_format(duration))
+	print('Size of the input: %i samples'%len(data))
 
 	# # Listening to the wav file.
 	# Audio(wav_data, rate=sample_rate)
-	waveform = wav_data / tf.int16.max
+	waveform = data / tf.int16.max
 	# Run the model, check the output.
 	scores, embeddings, spectrogram = model(waveform)
 	# 51 scores per 48 samples (3ms)
@@ -145,6 +155,8 @@ def main(input_folder = 'Inputs/', output_path='Outputs/'):
 
 	datapaths = []
 	for p in Path(input_folder).rglob('*.wav'):
+		datapaths.append(p)
+	for p in Path(input_folder).rglob('*.mp3'):
 		datapaths.append(p)
 
 
