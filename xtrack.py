@@ -4,12 +4,9 @@ import tensorflow as tf
 import numpy as np
 import csv
 
-		
-from IPython.display import Audio
 from scipy.io import wavfile
 from scipy import signal
 from pathlib import Path
-from pydub import AudioSegment
 
 
 from utils import *
@@ -46,16 +43,13 @@ def processAudioFile(path):
 	if 'wav' in str(path):
 		sample_rate, data = wavfile.read(path, 'rb')
 		original_sample_rate = sample_rate
-		sample_rate, data = ensure_sample_rate(sample_rate, data)
-	elif 'mp3' in str(path):
-		# Read the MP3 file
-		audio = AudioSegment.from_mp3(path)
-		# Convert audio to 16kHz sampling rate
-		sample_rate = 16000
-		audio = audio.set_frame_rate(sample_rate)
-		# Extract raw data and convert it to numpy array
-		data = np.array(audio.get_array_of_samples())
-	
+		if sample_rate != 16000:
+			print('Converting to 16kHz')
+			sample_rate, data = ensure_sample_rate(sample_rate, data)
+	else:
+		print('XTrack reads only .wav files')
+		raise
+
 	# Show some basic information about the audio.
 	duration = len(data)/sample_rate
 	print('Sample rate: %iHz'%sample_rate)
