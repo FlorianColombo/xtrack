@@ -6,7 +6,7 @@ from xtrack import *
 from utils import *
 
 # Function to process files in the input folder and put results in the output folder
-def process_files(input_folder, output_folder, variable_values):
+def process_files(input_folder, variable_values, writeTracks):
     for filename in os.listdir(input_folder):
         if filename.endswith('.wav'):  # Change the file extension according to your needs
             with open(os.path.join(input_folder, filename), 'r') as file:
@@ -14,10 +14,11 @@ def process_files(input_folder, output_folder, variable_values):
                 filename, waveform, spectrogram_np, probs = processAudioFile(input_folder+'/'+filename)
                 predicted_onsets, predicted_labels = Xtrack(probs, MUSIC_START_OFFSET=variable_values[0], MUSIC_STOP_OFFSET=variable_values[1])
         
-                output_path = output_folder+'/'+filename+'/'
+                output_path = input_folder+'/'+filename+'-XTrack/'
                 create_directory(output_path)
 
-                writeIndividualTracks(waveform, predicted_onsets, predicted_labels, output_path=output_path)
+                if writeTracks:
+                    writeIndividualTracks(waveform, predicted_onsets, predicted_labels, output_path=output_path)
                 writeIndexesCSV(predicted_onsets, predicted_labels, output_path=output_path)
 
 # Function to browse and select folders
@@ -29,9 +30,9 @@ def browse_folder(entry_widget):
 # Function to execute the code when the button is clicked
 def run_code():
     input_folder = input_entry.get()
-    output_folder = output_entry.get()
+    #output_folder = output_entry.get()
     variable_values = [var1_slider.get(), var2_slider.get()]#, var3_slider.get(), var4_slider.get()]
-    process_files(input_folder, output_folder, variable_values)
+    process_files(input_folder, variable_values, checkbox_var.get() == 1)
 
 # Function to update the label text with the current slider value
 def update_label(slider, label):
@@ -48,12 +49,12 @@ input_entry.grid(row=0, column=1)
 input_button = tk.Button(root, text="Browse", command=lambda: browse_folder(input_entry))
 input_button.grid(row=0, column=2)
 
-# Output folder selection
-tk.Label(root, text="Output Folder:").grid(row=1, column=0)
-output_entry = tk.Entry(root, width=50)
-output_entry.grid(row=1, column=1)
-output_button = tk.Button(root, text="Browse", command=lambda: browse_folder(output_entry))
-output_button.grid(row=1, column=2)
+# # Output folder selection
+# tk.Label(root, text="Output Folder:").grid(row=1, column=0)
+# output_entry = tk.Entry(root, width=50)
+# output_entry.grid(row=1, column=1)
+# output_button = tk.Button(root, text="Browse", command=lambda: browse_folder(output_entry))
+# output_button.grid(row=1, column=2)
 
 # Default values for the variables
 default_values = [-0.1, 4, 0.5, 0.5]
@@ -86,9 +87,19 @@ var2_label.grid(row=3, column=2)
 # var4_label = tk.Label(root, text=f'{default_values[3]:.2f}')
 # var4_label.grid(row=5, column=2)
 
+
+
+# Define a Tkinter variable for the checkbox
+checkbox_var = tk.IntVar()
+
+# Create a checkbox
+checkbox = ttk.Checkbutton(root, text="Create individual tracks", variable=checkbox_var)
+checkbox.grid(row=4, column=1)
+
+
 # Run button
-run_button = tk.Button(root, text="Run Code", command=run_code)
-run_button.grid(row=6, column=1)
+run_button = tk.Button(root, text="Run XTrack", command=run_code)
+run_button.grid(row=4, column=2)
 
 # Run the main event loop
 root.mainloop()

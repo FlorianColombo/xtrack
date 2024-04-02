@@ -77,7 +77,7 @@ def rounddown(x):
     return int(math.floor(x / 1000.0)) * 1000
 
 def writeIndexesCSV(predicted_onsets, predicted_labels, original_sample_rate = 48000, output_path='../Data/Markers/'):
-    with open(output_path+'XTrack.csv', 'w', newline='') as csvfile:
+    with open(output_path+'XTrack_autoMarkers.csv', 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile, delimiter='\t')
         csvwriter.writerow(['Name','Start','Duration','Time Format','Type','Description'])
         for o,l in zip(predicted_onsets, predicted_labels):#, all_durations):
