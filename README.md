@@ -11,6 +11,8 @@ python xtrack_gui.py
 Select the folder with your input wav files and press Run XTrack to generate the automated segmentation.
 
 Requirements:
+ffmpeg executable binary file placed in xtrack folder (download: https://ffmpeg.org/download.html)
+
 python3.7
 tensorflow
 scipy
