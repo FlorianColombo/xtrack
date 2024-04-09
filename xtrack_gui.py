@@ -5,21 +5,32 @@ import os
 from xtrack import *
 from utils import *
 
+import subprocess
+FFMPEG = './ffmpeg'
+
+def convert_16k(datapath, output_path):
+    f = datapath.split('/')[-1]
+    print('convertingt to 16kHz', f)
+    subprocess.run([FFMPEG, "-i", datapath, "-c:a", "pcm_s16le", "-ar", "16000", "-ac", "1", output_path+f[:-4]+ "_16kHz.wav"], capture_output=False)
+    print(f, 'converted to 16kHz')
+
 # Function to process files in the input folder and put results in the output folder
 def process_files(input_folder, variable_values, writeTracks):
     for filename in os.listdir(input_folder):
-        if filename.endswith('.wav'):  # Change the file extension according to your needs
-            with open(os.path.join(input_folder, filename), 'r') as file:
-                # Example processing: Changing variable values in each file
-                filename, waveform, spectrogram_np, probs = processAudioFile(input_folder+'/'+filename)
-                predicted_onsets, predicted_labels = Xtrack(probs, MUSIC_START_OFFSET=variable_values[0], MUSIC_STOP_OFFSET=variable_values[1])
-        
-                output_path = input_folder+'/'+filename+'-XTrack/'
-                create_directory(output_path)
+        if filename[0] == '.':
+            continue
+        if filename[-3:] in ['wav', 'm4a', 'mp3']:
+            output_path = input_folder+'/'+filename[:-4]+'-XTrack/'
+            create_directory(output_path)
 
-                if writeTracks:
-                    writeIndividualTracks(waveform, predicted_onsets, predicted_labels, output_path=output_path)
-                writeIndexesCSV(predicted_onsets, predicted_labels, output_path=output_path)
+            convert_16k(input_folder+'/'+filename, output_path)
+
+            filename, waveform, spectrogram_np, probs = processAudioFile(output_path+filename[:-4]+"_16kHz.wav")
+            predicted_onsets, predicted_labels = Xtrack(probs, MUSIC_START_OFFSET=variable_values[0], MUSIC_STOP_OFFSET=variable_values[1])        
+
+            if writeTracks:
+                writeIndividualTracks(waveform, predicted_onsets, predicted_labels, output_path=output_path)
+            writeIndexesCSV(predicted_onsets, predicted_labels, output_path=output_path)
 
 # Function to browse and select folders
 def browse_folder(entry_widget):
